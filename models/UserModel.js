@@ -39,12 +39,29 @@ const validateUser = (_bodyData) => {
             .required(),
         email: Joi.string().email().required(),
         dateOfBirth: Joi.date().required(),
-        password: Joi.string().required()
+        password: Joi.string().required(),
+        role: Joi.array().items(Joi.string())
     });
     return joiSchema.validate(_bodyData);
+}
+
+const getValidationSchema = () => {
+    return joiSchema = Joi.object({
+        name: Joi.string().min(2).required(),
+        username: Joi.string()
+            .pattern(new RegExp('^[a-zA-Z0-9._]+$')) // Allows '.', '_'
+            .min(2)
+            .max(30)
+            .required(),
+        email: Joi.string().email().required(),
+        dateOfBirth: Joi.date().required(),
+        password: Joi.string().required(),
+        role: Joi.array().items(Joi.string())
+    });
 }
 
 const UserModel = mongoose.model('User', userSchema);
 
 exports.UserModel = UserModel;
 exports.validateUser = validateUser;
+exports.getValidationSchema = getValidationSchema;

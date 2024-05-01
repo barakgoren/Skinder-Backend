@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const { UserModel, validateUser } = require('../models/UserModel');
 const { genToken } = require('../utils/auth');
+const { Instructor, validateInstructor } = require('../models/Instructor');
 
 // --------------------------- GETS ---------------------------
 
@@ -41,14 +42,24 @@ router.get('/:id', async (req, res) => {
 // Create a new user
 router.post('/', async (req, res) => {
     try {
+        // Hash the password
+        req.body.password = await bcrypt.hash(req.body.password, 10);
+
+        if (req.body.role && req.body.role.includes("Instructor")) {
+            const validInstructor = validateInstructor(req.body);
+            if (validInstructor.error) {
+                return res.status(400).send(validInstructor.error.details);
+            }
+            let instructor = new Instructor(req.body);
+            instructor = await instructor.save();
+            return res.status(201).json(instructor);
+        }
+
         // Validate the request body
         const validBody = validateUser(req.body);
         if (validBody.error) {
             return res.status(400).send(validBody.error.details);
         }
-
-        // Hash the password
-        req.body.password = await bcrypt.hash(req.body.password, 10);
 
         // Create the user
         let user = new UserModel(req.body);
