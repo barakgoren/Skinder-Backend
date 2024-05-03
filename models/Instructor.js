@@ -6,7 +6,7 @@ const Joi = require('joi');
 const instructorSchema = mongoose.Schema({
     type: {type: String, required: true},
     skillLevel: {type: String, required: true, enum: ['Beginner', 'Intermediate', 'Advanced']},
-    rating: {type: Number, default: 0},
+    rating: {type: Array, default: 0},
     operatingStartHour: {type: String, required: true},
     operatingEndHour: {type: String, required: true},
     price: {type: Number, required: true},
@@ -22,7 +22,7 @@ const validateInstructor = (_bodyData) => {
         operatingStartHour: Joi.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/).required(),
         operatingEndHour: Joi.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/).required(),
         price: Joi.number().required(),
-        rating: Joi.number()
+        rating: Joi.array()
     });
     const combinedSchema = baseUserSchema.concat(joiSchema);
     return combinedSchema.validate(_bodyData);

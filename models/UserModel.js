@@ -15,6 +15,10 @@ const userSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    profilePic: {
+        type: String,
+        default: 'default.png'
+    },
     dateOfBirth: {
         type: Date,
         required: true
@@ -38,6 +42,7 @@ const validateUser = (_bodyData) => {
             .max(30)
             .required(),
         email: Joi.string().email().required(),
+        profilePic: Joi.string(),
         dateOfBirth: Joi.date().required(),
         password: Joi.string().required(),
         role: Joi.array().items(Joi.string())
@@ -53,6 +58,7 @@ const getValidationSchema = () => {
             .min(2)
             .max(30)
             .required(),
+        profilePic: Joi.string(),
         email: Joi.string().email().required(),
         dateOfBirth: Joi.date().required(),
         password: Joi.string().required(),

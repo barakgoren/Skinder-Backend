@@ -5,6 +5,8 @@ const bcrypt = require('bcrypt');
 const { UserModel, validateUser } = require('../models/UserModel');
 const { genToken } = require('../utils/auth');
 const { Instructor, validateInstructor } = require('../models/Instructor');
+const { uploadSingle } = require('../utils/uploadHandler');
+const path = require("path");
 
 // --------------------------- GETS ---------------------------
 
@@ -59,7 +61,18 @@ router.post('/', async (req, res) => {
         // Hash the password
         req.body.password = await bcrypt.hash(req.body.password, 10);
 
-        if (req.body.role && req.body.role.includes("Instructor")) {
+        // Upload profile picture
+        if (req.files && req.files.profilePic) {
+            req.files.profilePic.name = (req.body.username + '_profile' + path.extname(req.files.profilePic.name)).toLocaleLowerCase();
+            req.body.profilePic = req.files.profilePic.name;
+            uploadSingle(req, 'profilePic', '');
+        } else {
+            req.body.profilePic = 'default.jpg';
+        }
+
+        if (req.body.role && req.body.role === "Instructor") {
+            req.body.role = ["Instructor"];
+            req.body.rating = [];
             const validInstructor = validateInstructor(req.body);
             if (validInstructor.error) {
                 return res.status(400).send(validInstructor.error.details);
@@ -82,6 +95,9 @@ router.post('/', async (req, res) => {
         return res.status(201).json(user);
     } catch (error) {
         console.error('Error creating user:', error);
+        if (error.code === 11000) {
+            return res.status(409).send('Username or email already exists');
+        }
         res.status(500).json({ message: 'Internal server error', error });
     }
 });
@@ -110,6 +126,25 @@ router.post('/login', async (req, res) => {
     } catch (error) {
         console.error('Error logging in:', error);
         res.status(500).json({ message: 'Internal server error', error });
+    }
+});
+
+// --------------------------- PATCHS ---------------------------
+
+// Edit rating of instructor
+router.patch('/:id', async (req, res) => {
+    try {
+        const instructor = await Instructor.findById(req.params.id);
+        if (!instructor) {
+            return res.status(404).send('Instructor not found');
+        }
+        req.body.rating = parseInt(req.body.rating);
+        instructor.rating.push(req.body.rating);
+        await instructor.save();
+        return res.json(instructor);
+    } catch (error) {
+        console.error('Error updating instructor:', error);
+        return res.status(500).json({ message: 'Internal server error', error });
     }
 });
 
