@@ -22,6 +22,20 @@ router.get('/', async (req, res) => {
     }
 });
 
+// Get all instructors withour personal details
+router.get('/instructors', async (req, res) => {
+    try {
+        const instructors = await Instructor.find({}, { password: 0, role: 0 });
+        if (!instructors.length) {
+            return res.status(404).send('No instructors found');
+        }
+        return res.json(instructors);
+    } catch (error) {
+        console.error('Error getting instructors:', error);
+        res.status(500).json({ message: 'Internal server error', error });
+    }
+});
+
 // Get user by ID
 router.get('/:id', async (req, res) => {
     try {
