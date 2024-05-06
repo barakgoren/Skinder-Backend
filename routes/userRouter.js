@@ -41,7 +41,7 @@ router.get('/instructors', async (req, res) => {
 // Get user by ID
 router.get('/:id', async (req, res) => {
     try {
-        const user = await UserModel.findById(req.params.id);
+        const user = await UserModel.findById(req.params.id, { password: 0 });
         if (!user) {
             return res.status(404).send('User not found');
         }

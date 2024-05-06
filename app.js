@@ -9,6 +9,7 @@ const path = require('path');
 
 // Routers
 const userRouter = require('./routes/userRouter');
+const reviewRouter = require('./routes/reviewRouter');
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -20,6 +21,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 //Routs
 app.use('/users', userRouter);
+app.use('/reviews', reviewRouter);
 // Default Route
 app.get('/', (req, res) => { res.send('SkinderApp API by Barak Goren') });
 // 404 Route
