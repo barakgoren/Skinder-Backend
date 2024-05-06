@@ -3,7 +3,7 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const { UserModel, validateUser } = require('../models/UserModel');
-const { genToken } = require('../utils/auth');
+const { genToken, isAuth } = require('../utils/auth');
 const { Instructor, validateInstructor } = require('../models/Instructor');
 const { uploadSingle } = require('../utils/uploadHandler');
 const path = require("path");
@@ -13,7 +13,7 @@ const path = require("path");
 // Get all users
 router.get('/', async (req, res) => {
     try {
-        const users = await UserModel.find();
+        const users = await UserModel.find().populate('rating').populate('saved');
         if (!users.length) {
             return res.status(404).send('No users found');
         }
@@ -24,10 +24,10 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Get all instructors withour personal details
+// Get all instructors withouא personal details
 router.get('/instructors', async (req, res) => {
     try {
-        const instructors = await Instructor.find({}, { password: 0, role: 0 });
+        const instructors = await Instructor.find({}, { password: 0, role: 0 }).populate('rating').populate('saved');
         if (!instructors.length) {
             return res.status(404).send('No instructors found');
         }
@@ -38,10 +38,24 @@ router.get('/instructors', async (req, res) => {
     }
 });
 
+// Get user by a Bearer token
+router.get('/me',isAuth, async (req, res) => {
+    try {
+        const user = await UserModel.findById(req.userId, { password: 0 }).populate('rating').populate('saved');
+        if (!user) {
+            return res.status(404).send('User not found');
+        }
+        return res.status(200).json(user);
+    } catch (error) {
+        console.error('Error getting user:', error);
+        res.status(500).json({ message: 'Internal server error', error });
+    }
+});
+
 // Get user by ID
 router.get('/:id', async (req, res) => {
     try {
-        const user = await UserModel.findById(req.params.id, { password: 0 });
+        const user = await UserModel.findById(req.params.id, { password: 0 }).populate('rating').populate('saved');
         if (!user) {
             return res.status(404).send('User not found');
         }
@@ -110,7 +124,7 @@ router.post('/login', async (req, res) => {
             return res.status(400).send('Username and password are required');
         }
         // Find the user
-        const user = await UserModel.findOne({ username: req.body.username });
+        const user = await UserModel.findOne({ username: req.body.username }).populate('rating').populate('saved');
         if (!user) {
             return res.status(404).send('User not found');
         } else {
@@ -147,5 +161,42 @@ router.patch('/:id', async (req, res) => {
         return res.status(500).json({ message: 'Internal server error', error });
     }
 });
+
+// Adding document to saved array
+router.patch('/save/:id', async (req, res) => {
+    try {
+        const user = await UserModel.findById(req.params.id).populate('saved').populate('rating');
+        req.body.saved = await UserModel.findById(req.body.saved).populate('rating').populate('saved');
+        if (!user) {
+            return res.status(404).send('User not found');
+        }
+        user.saved.push(req.body.saved);
+        await user.save();
+        return res.status(200).json(user);
+    } catch (error) {
+        console.error('Error saving document:', error);
+        return res.status(500).json({ message: 'Internal server error', error });
+    }
+});
+
+// Remove document from saved array
+router.patch('/unsave/:id', async (req, res) => {
+    try {
+        const user = await UserModel.findById(req.params.id).populate('saved').populate('rating');
+        req.body.saved = await UserModel.findById(req.body.saved).populate('rating').populate('saved');
+        if (!user) {
+            return res.status(404).send('User not found');
+        }
+        user.saved = user.saved.filter((saved) => saved._id == req.body.saved._id);
+        await user.save();
+        return res.status(200).json(user);
+    } catch (error) {
+        console.error('Error unsaving document:', error);
+        return res.status(500).json({ message: 'Internal server error', error });
+    }
+});
+
+// --------------------------- DELETES ---------------------------
+
 
 module.exports = router;

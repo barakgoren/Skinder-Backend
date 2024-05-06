@@ -6,9 +6,10 @@ const Joi = require('joi');
 const instructorSchema = mongoose.Schema({
     type: {type: String, required: true},
     skillLevel: {type: String, required: true, enum: ['Beginner', 'Intermediate', 'Advanced']},
-    rating: {type: Array, default: 0},
+    rating: {type: Array, ref: 'Review'},
     operatingStartHour: {type: String, required: true},
     operatingEndHour: {type: String, required: true},
+    minAge: {type: Number, default: 10},
     price: {type: Number, required: true},
 });
 
@@ -21,6 +22,7 @@ const validateInstructor = (_bodyData) => {
         skillLevel: Joi.string().required(),
         operatingStartHour: Joi.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/).required(),
         operatingEndHour: Joi.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/).required(),
+        minAge: Joi.number().min(10),
         price: Joi.number().required(),
         rating: Joi.array()
     });

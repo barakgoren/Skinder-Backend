@@ -23,6 +23,17 @@ const userSchema = mongoose.Schema({
         type: Date,
         required: true
     },
+    phoneNumber: {
+        type: String,
+        default: ''
+    },
+    saved: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            default: []
+        }
+    ],
     role: {
         type: Array,
         default: ["User"]
@@ -42,6 +53,8 @@ const validateUser = (_bodyData) => {
             .max(30)
             .required(),
         email: Joi.string().email().required(),
+        phoneNumber: Joi.string().pattern(new RegExp('^[0-9]{10}$')),
+        saved: Joi.array(),
         profilePic: Joi.string(),
         dateOfBirth: Joi.date().required(),
         password: Joi.string().required(),
@@ -60,6 +73,8 @@ const getValidationSchema = () => {
             .required(),
         profilePic: Joi.string(),
         email: Joi.string().email().required(),
+        phoneNumber: Joi.string().pattern(new RegExp('^[0-9]{10}$')),
+        saved: Joi.array(),
         dateOfBirth: Joi.date().required(),
         password: Joi.string().required(),
         role: Joi.array().items(Joi.string())

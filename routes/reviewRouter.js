@@ -50,6 +50,14 @@ router.post('/', async (req, res) => {
             return res.status(400).send(error.details[0].message);
         }
         let review = new ReviewModel(req.body);
+
+        // Add review ObjectId to user's rating array
+        let user = await UserModel.findById(review.target);
+        if (!user) {
+            return res.status(404).send('Target user not found');
+        }
+        user.rating.push(review._id);
+        await user.save();
         await review.save();
         return res.status(201).json(review);
     } catch (error) {
