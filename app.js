@@ -10,12 +10,14 @@ const path = require('path');
 // Routers
 const userRouter = require('./routes/userRouter');
 const reviewRouter = require('./routes/reviewRouter');
+const { task } = require('./models/Instructor')
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.json());
 app.use(fileUpload({ fileSize: 5 * 1024 * 1024 }));
 app.use(express.static(path.join(__dirname, 'public')));
+task.start();
 
 
 
