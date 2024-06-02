@@ -1,6 +1,6 @@
 const path = require("path");
 
-exports.uploadSingle = (req,fileKey,dest,max_mb=5,filesAllow=[".png",".jpg",".gif",".jpeg"]) => {
+exports.uploadSingle = (req,fileKey,dest,max_mb=1000,filesAllow=[".png",".jpg",".gif",".jpeg"]) => {
   return new Promise((resolve,reject) => {
     let myFile = req.files[fileKey];
     if(!myFile){

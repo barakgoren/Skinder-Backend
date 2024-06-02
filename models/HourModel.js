@@ -18,6 +18,17 @@ const hourSchema = mongoose.Schema({
     },
 })
 
+const dateSchema = mongoose.Schema({
+    date: {
+        type: Date,
+        required: true
+    },
+    hoursAvailable: {
+        type: [hourSchema],
+        default: []
+    }
+})
+
 const validateHour = (_bodyData) => {
     let joiSchema = Joi.object({
         date: Joi.date().required(),
@@ -28,6 +39,6 @@ const validateHour = (_bodyData) => {
 }
 
 exports.validateHour = validateHour;
-exports.hourSchema = hourSchema;
+exports.dateSchema = dateSchema;
 
 

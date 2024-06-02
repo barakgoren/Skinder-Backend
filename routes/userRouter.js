@@ -79,7 +79,10 @@ router.post('/', async (req, res) => {
         if (req.files && req.files.profilePic) {
             req.files.profilePic.name = (req.body.username + '_profile' + path.extname(req.files.profilePic.name)).toLocaleLowerCase();
             req.body.profilePic = req.files.profilePic.name;
-            uploadSingle(req, 'profilePic', '');
+            uploadSingle(req, 'profilePic', '').catch((error) => {
+                console.error('Error uploading profile picture:', error);
+                return res.status(500).json({ message: 'Internal server error', error });
+            });
         } else {
             req.body.profilePic = 'default.jpg';
         }

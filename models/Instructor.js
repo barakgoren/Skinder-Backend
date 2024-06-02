@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const { UserModel, validateUser, getValidationSchema } = require('./UserModel');
-const { hourSchema } = require('./HourModel');
+const { dateSchema } = require('./HourModel');
 const Joi = require('joi');
 const cron = require('node-cron');
 
@@ -9,7 +9,7 @@ const instructorSchema = mongoose.Schema({
     type: { type: String, required: true },
     skillLevel: { type: String, required: true, enum: ['Beginner', 'Intermediate', 'Advanced'] },
     rating: { type: Array, ref: 'Review' },
-    availableHours: { type: [hourSchema], default: [] },
+    availableHours: { type: [dateSchema], default: [] },
     operatingStartHour: { type: String, required: true },
     operatingEndHour: { type: String, required: true },
     minAge: { type: Number, default: 10 },
@@ -37,28 +37,34 @@ const initializeHours = (instructor) => {
         throw new Error('operatingStartHour and operatingEndHour must be defined');
     }
     console.log('Initializing hours');
-    let hours = [];
+    let availableDates = [];
     let currentDate = new Date();
 
     // Loop over the next 14 days
     for (let i = 0; i < 14; i++) {
-        let date = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + i);
+        let date = new Date(Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + i));
         let startHour = parseInt(instructor.operatingStartHour.split(':')[0]);
         let endHour = parseInt(instructor.operatingEndHour.split(':')[0]);
+        let hoursAvailable = [];
 
         // For each hour between operatingStartHour and operatingEndHour, create a new hourSchema subdocument
         for (let j = startHour; j < endHour; j++) {
             let hourDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), j));
-            hours.push({ date: hourDate, isAvailable: true });
+            hoursAvailable.push({ date: hourDate, isAvailable: true });
         }
+
+        // Add the hours to the hoursAvailable array for this date
+        availableDates.push({ date: date, hoursAvailable: hoursAvailable });
     }
 
-    // Add the hours to the availableHours array
-    instructor.availableHours.push(...hours);
+    // Add the availableDates to the availableHours array
+    instructor.availableHours.push(...availableDates);
 }
 
 const updateAvailability = async () => {
-    console.log('Updating availability');
+    let currentHour = new Date().getHours();
+    let formattedCurrentHour = currentHour < 10 ? `0${currentHour}:00` : `${currentHour}:00`;
+    console.log('Updating availability ' + formattedCurrentHour);
     try {
         // Get all instructors
         const instructors = await Instructor.find();
@@ -66,51 +72,44 @@ const updateAvailability = async () => {
         // For each instructor
         for (let instructor of instructors) {
             // Remove past hours
-            const now = new Date();
-            instructor.availableHours = instructor.availableHours.filter(hour => hour.date > now);
+            let notNotUTC = new Date();
+            let now = new Date(notNotUTC.toISOString());
 
-            // Calculate the end date of the availability window
-            let endDate = new Date();
-            endDate.setDate(endDate.getDate() + 14);
-
-            // Find the last available hour
-            let lastHour = new Date(Math.max(...instructor.availableHours.map(hour => hour.date)));
-
-            // If the last available hour is before the end date
-            if (lastHour < endDate) {
-                // Add hours until the end date
-                let hourToAdd = new Date(lastHour);
-                hourToAdd.setHours(hourToAdd.getHours() + 1);
-
-                while (hourToAdd < endDate) {
-                    // Only add hours within the operating hours
-                    if (hourToAdd.getHours() >= instructor.operatingStartHour && hourToAdd.getHours() < instructor.operatingEndHour) {
-                        instructor.availableHours.push({
-                            date: new Date(hourToAdd),  // Create a new Date object to avoid reference issues
-                            client: null,
-                            isAvailable: true
-                        });
+            for (let date of instructor.availableHours) {
+                date.hoursAvailable = date.hoursAvailable.filter(hour => {
+                    const hourDate = new Date(hour.date);
+                    return hourDate >= now;
+                });
+                // If the date has no more hours available, remove it, and add a new date 14 days in the future
+                if (date.hoursAvailable.length === 0) {
+                    console.log("Date Outdated: " + date.date + " - Adding new date 14 days in the future");
+                    instructor.availableHours = instructor.availableHours.filter(d => d.date !== date.date);
+                    let newDate = new Date(date.date);
+                    newDate.setDate(newDate.getDate() + 14);
+                    let startHour = parseInt(instructor.operatingStartHour.split(':')[0]);
+                    let endHour = parseInt(instructor.operatingEndHour.split(':')[0]);
+                    let hoursAvailable = [];
+                    for (let j = startHour; j < endHour; j++) {
+                        let hourDate = new Date(Date.UTC(newDate.getFullYear(), newDate.getMonth(), newDate.getDate(), j));
+                        hoursAvailable.push({ date: hourDate, isAvailable: true });
                     }
-
-                    hourToAdd.setHours(hourToAdd.getHours() + 1);
+                    instructor.availableHours.push({ date: newDate, hoursAvailable: hoursAvailable });
                 }
             }
 
             // Save the updated instructor
             await instructor.save();
         }
-        console.log('Availability updated');
     } catch (error) {
         console.error('Error updating availability:', error);
     }
 };
 
-const task = cron.schedule('0 * * * *', updateAvailability);
+const task = cron.schedule('* * * * *', updateAvailability);
 
 
 // Use initializeHours as a pre save middleware
 instructorSchema.pre('save', function (next) {
-    console.log('Pre save middleware');
     // Only initialize hours if the document is new
     if (this.isNew) {
         initializeHours(this);
