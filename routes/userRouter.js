@@ -186,11 +186,12 @@ router.patch('/save/:id', async (req, res) => {
 router.patch('/unsave/:id', async (req, res) => {
     try {
         const user = await UserModel.findById(req.params.id).populate('saved').populate('rating');
-        req.body.saved = await UserModel.findById(req.body.saved).populate('rating').populate('saved');
         if (!user) {
             return res.status(404).send('User not found');
         }
-        user.saved = user.saved.filter((saved) => saved._id == req.body.saved._id);
+        console.log("Filter the id: " + req.body.saved);
+        user.saved = user.saved.filter((saved) => saved._id.toString() != req.body.saved);
+        console.log("Filtered list: " + user.saved);
         await user.save();
         return res.status(200).json(user);
     } catch (error) {

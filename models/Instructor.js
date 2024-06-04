@@ -82,7 +82,6 @@ const updateAvailability = async () => {
                 });
                 // If the date has no more hours available, remove it, and add a new date 14 days in the future
                 if (date.hoursAvailable.length === 0) {
-                    console.log("Date Outdated: " + date.date + " - Adding new date 14 days in the future");
                     instructor.availableHours = instructor.availableHours.filter(d => d.date !== date.date);
                     let newDate = new Date(date.date);
                     newDate.setDate(newDate.getDate() + 14);
