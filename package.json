@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "author": "Barak Goren",
   "license": "ISC",
@@ -23,6 +23,8 @@
     "node-cron": "^3.0.3"
   },
   "devDependencies": {
+    "jest": "^29.7.0",
+    "mongoose-mock": "^0.4.0",
     "nodemon": "^3.1.0"
   }
 }

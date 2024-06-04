@@ -17,7 +17,6 @@ app.use(bodyParser.json());
 app.use(express.json());
 app.use(fileUpload({ fileSize: 5 * 1024 * 1024 }));
 app.use(express.static(path.join(__dirname, 'public')));
-// TODO : Testing Monday
 task.start();
 
 
