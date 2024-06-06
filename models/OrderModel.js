@@ -4,7 +4,7 @@ const Joi = require('joi');
 
 const orderSchema = mongoose.Schema({
     date: {
-        type: Date,
+        type: [Date],
         required: true
     },
     client: {
@@ -28,8 +28,8 @@ const orderSchema = mongoose.Schema({
 
 const validateOrder = (_bodyData) => {
     let joiSchema = Joi.object({
-        date: Joi.date().required().messages({
-            'date.base': 'date must be a date',
+        date: Joi.array().items(Joi.date()).required().messages({
+            'array.base': 'date must be an array',
             'any.required': 'date is required'
         }),
         client: Joi.string().required(),
