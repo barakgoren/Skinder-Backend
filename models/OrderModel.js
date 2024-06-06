@@ -1,9 +1,6 @@
 const express = require('express');
-const mock = require('mongoose-mock');
 const mongoose = require('mongoose');
 const Joi = require('joi');
-
-// TODO : Continue from OrderModel.js : line 6
 
 const orderSchema = mongoose.Schema({
     date: {
@@ -21,7 +18,7 @@ const orderSchema = mongoose.Schema({
         required: true
     },
     location: {
-        type: [Float],
+        type: [Number],
     },
     isApproved: {
         type: Boolean,
@@ -31,7 +28,10 @@ const orderSchema = mongoose.Schema({
 
 const validateOrder = (_bodyData) => {
     let joiSchema = Joi.object({
-        date: Joi.date().required(),
+        date: Joi.date().required().messages({
+            'date.base': 'date must be a date',
+            'any.required': 'date is required'
+        }),
         client: Joi.string().required(),
         instructor: Joi.string().required(),
         location: Joi.array().items(Joi.number()).length(2).required().messages({
@@ -46,7 +46,7 @@ const validateOrder = (_bodyData) => {
 
 const OrderModel = mongoose.model('Order', orderSchema);
 
-exports.validateHour = validateHour;
+exports.validateOrder = validateOrder;
 exports.OrderModel = OrderModel;
 
 
