@@ -11,7 +11,8 @@ const path = require('path');
 const userRouter = require('./routes/userRouter');
 const reviewRouter = require('./routes/reviewRouter');
 const orderRouter = require('./routes/orderRouter');
-const { task } = require('./models/Instructor')
+const resortsRouter = require('./routes/resortsRouter');
+const { task } = require('./models/Instructor');
 
 
 app.use(cors());
@@ -27,6 +28,7 @@ task.start();
 app.use('/users', userRouter);
 app.use('/reviews', reviewRouter);
 app.use('/orders', orderRouter);
+app.use('/resorts', resortsRouter);
 // Default Route
 app.get('/', (req, res) => { res.send('SkinderApp API by Barak Goren') });
 // 404 Route

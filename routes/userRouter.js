@@ -7,6 +7,8 @@ const { genToken, isAuth } = require('../utils/auth');
 const { Instructor, validateInstructor } = require('../models/Instructor');
 const { uploadSingle } = require('../utils/uploadHandler');
 const path = require("path");
+const { ReviewModel } = require('../models/ReviewModel');
+const { ResortModel } = require('../models/ResortModel');
 
 // --------------------------- GETS ---------------------------
 
@@ -28,10 +30,14 @@ router.get('/', async (req, res) => {
 router.get('/instructors', async (req, res) => {
     try {
         const instructors = await Instructor.find({}, { password: 0, role: 0 }).populate('rating').populate('saved');
+        const instructorsWithResorts = await Promise.all(instructors.map(async (instructor) => {
+            const resort = await ResortModel.findById(instructor.resortId);
+            return { ...instructor.toObject(), resort }; // Convert Mongoose document to object and add resort
+        }));
         if (!instructors.length) {
             return res.status(404).send('No instructors found');
         }
-        return res.json(instructors);
+        return res.json(instructorsWithResorts);
     } catch (error) {
         console.error('Error getting instructors:', error);
         res.status(500).json({ message: 'Internal server error', error });
@@ -58,6 +64,10 @@ router.get('/:id', async (req, res) => {
         const user = await UserModel.findById(req.params.id, { password: 0 }).populate('rating').populate('saved');
         if (!user) {
             return res.status(404).send('User not found');
+        }
+        if(user.__t === "Instructor"){
+            const resort = await ResortModel.findById(user.resortId);
+            return res.json({ ...user.toObject(), resort });
         }
         res.json(user);
     } catch (error) {

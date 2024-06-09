@@ -14,6 +14,7 @@ const instructorSchema = mongoose.Schema({
     operatingEndHour: { type: String, required: true },
     minAge: { type: Number, default: 10 },
     price: { type: Number, required: true },
+    resortId: { type: mongoose.Schema.Types.ObjectId, ref: 'Resort' }
 });
 
 const validateInstructor = (_bodyData) => {
@@ -27,6 +28,7 @@ const validateInstructor = (_bodyData) => {
         price: Joi.number().required(),
         rating: Joi.array(),
         availableHours: Joi.array(),
+        resortId: Joi.string().required()
     });
     const combinedSchema = baseUserSchema.concat(joiSchema);
     return combinedSchema.validate(_bodyData);

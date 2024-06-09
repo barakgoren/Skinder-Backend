@@ -35,6 +35,7 @@ const ReviewModel = mongoose.model('Review', reviewSchema);
 
 const validateReview = (_bodyData) => {
     let joiSchema = Joi.object({
+        dateCreated: Joi.date(),
         author: Joi.string().required(),
         target: Joi.string().required(),
         title: Joi.string().min(2).max(50).required(),
