@@ -19,7 +19,14 @@ router.get('/', async (req, res) => {
         if (!users.length) {
             return res.status(404).send('No users found');
         }
-        res.json(users);
+        let usersWithResorts = await Promise.all(users.map(async (user) => {
+            if (user.__t === "Instructor") {
+                const resort = await ResortModel.findById(user.resortId);
+                return { ...user.toObject(), resort }; // Convert Mongoose document to object and add resort
+            }
+            return user;
+        }));
+        res.json(usersWithResorts);
     } catch (error) {
         console.error('Error getting users:', error);
         res.status(500).json({ message: 'Internal server error', error });
@@ -45,7 +52,7 @@ router.get('/instructors', async (req, res) => {
 });
 
 // Get user by a Bearer token
-router.get('/me',isAuth, async (req, res) => {
+router.get('/me', isAuth, async (req, res) => {
     try {
         const user = await UserModel.findById(req.userId, { password: 0 }).populate('rating').populate('saved');
         if (!user) {
@@ -65,7 +72,7 @@ router.get('/:id', async (req, res) => {
         if (!user) {
             return res.status(404).send('User not found');
         }
-        if(user.__t === "Instructor"){
+        if (user.__t === "Instructor") {
             const resort = await ResortModel.findById(user.resortId);
             return res.json({ ...user.toObject(), resort });
         }
