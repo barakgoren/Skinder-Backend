@@ -7,6 +7,10 @@ const locationSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    countryCode: {
+        type: String,
+        required: true
+    },
     resortName: {
         type: String,
         required: true
@@ -36,6 +40,7 @@ const LocationModel = mongoose.model('Location', locationSchema);
 const validLocation = (_bodyData) => {
     let joiSchema = Joi.object({
         resortCode: Joi.string().required(),
+        countryCode: Joi.string().required(),
         resortName: Joi.string().required(),
         resortDescription: Joi.string().required(),
         locationName: Joi.string().required(),
