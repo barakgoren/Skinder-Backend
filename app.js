@@ -31,6 +31,9 @@ app.use('/reviews', reviewRouter);
 app.use('/orders', orderRouter);
 app.use('/resorts', resortsRouter);
 app.use('/locations', locationRouter);
+app.get('/summary', (req, res) => {
+  // TODO : app.js - create route for summary widgets
+});
 // Default Route
 app.get('/', (req, res) => { res.send('SkinderApp API by Barak Goren') });
 // 404 Route

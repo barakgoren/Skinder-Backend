@@ -22,7 +22,8 @@ const orderSchema = mongoose.Schema({
         required: true
     },
     location: {
-        type: [Number],
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Location',
     },
     isApproved: {
         type: Boolean,
@@ -39,11 +40,7 @@ const validateOrder = (_bodyData) => {
         }),
         client: Joi.string().required(),
         instructor: Joi.string().required(),
-        location: Joi.array().items(Joi.number()).length(2).required().messages({
-            'array.base': 'location must be an array',
-            'array.length': 'location must have exactly 2 numbers',
-            'any.required': 'location is required'
-        }),
+        location: Joi.string(),
         isApproved: Joi.boolean()
     });
     return joiSchema.validate(_bodyData);

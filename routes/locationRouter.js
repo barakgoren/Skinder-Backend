@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
-const { LocationModel, validateLocation } = require('../models/LocationModel');
+const { LocationModel, validLocation } = require('../models/LocationModel');
+const { ResortModel } = require('../models/ResortModel');
 
 
 // --------------------------- GETS ---------------------------
@@ -22,8 +23,6 @@ router.get('/', async (req, res) => {
 
 // Get all locations from a resort
 router.get('/:resortCode', async (req, res) => {
-    console.log('get all locations');
-    console.log(req.params.resortCode);
     const resortCode = req.params.resortCode;
     if (!resortCode) {
         return res.status(400).send('Missing resort code');
@@ -42,6 +41,34 @@ router.get('/:resortCode', async (req, res) => {
 
 
 // --------------------------- POSTS ---------------------------
+
+// Create new location
+router.post('/', async (req, res) => {
+    // Find the referent resort
+    try {
+        const resort = await ResortModel.findById(req.body.resortId);
+        // Creating an object of location
+        const location = {
+            resortCode: resort.resortCode,
+            countryCode: resort.countryCode,
+            resortName: resort.resortName,
+            locationName: req.body.locationName,
+            locationCoords: [req.body.locationCoords.lat, req.body.locationCoords.lng],
+            locationDescription: req.body.locationDescription,
+            resortId: req.body.resortId
+        };
+        const { error } = validLocation(location);
+        if (error) {
+            console.error('Error validating location:', error);
+        }
+        const newLocation = new LocationModel(location);
+        await newLocation.save();
+        return res.json(newLocation);
+    } catch (error) {
+        console.error('Error creating location:', error);
+        return res.status(500).json({ message: 'Internal server error', error });
+    }
+});
 
 
 // --------------------------- PATCHS ---------------------------

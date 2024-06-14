@@ -42,14 +42,14 @@ const validLocation = (_bodyData) => {
         resortCode: Joi.string().required(),
         countryCode: Joi.string().required(),
         resortName: Joi.string().required(),
-        resortDescription: Joi.string().required(),
+        locationDescription: Joi.string().required(),
         locationName: Joi.string().required(),
         locationCoords: Joi.array().items(Joi.number()).length(2).required().messages({
             'array.base': 'location must be an array',
             'array.length': 'location must have exactly 2 numbers',
             'any.required': 'location is required'
         }),
-        resortId: Joi.string().required()
+        resortId: Joi.required()
     });
     return joiSchema.validate(_bodyData);
 }
