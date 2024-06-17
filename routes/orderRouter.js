@@ -6,8 +6,18 @@ const { isAuth } = require('../utils/auth');
 
 // --------------------------- GETS ---------------------------
 
-// Get user's unapproved orders
+// Get all orders
+router.get('/', async (req, res) => {
+    try {
+        const orders = await OrderModel.find().populate('client').populate('location').populate('instructor');
+        return res.status(200).json(orders);
+    } catch (error) {
+        console.error('Error getting orders:', error);
+        res.status(500).json({ message: 'Internal server error', error });
+    }
+});
 
+// Get user's unapproved orders
 router.get('/unapproved', isAuth, async (req, res) => {
     try {
         const orders = await OrderModel.find({ isApproved: false, instructor: req.userId }).populate('client').populate('location');
