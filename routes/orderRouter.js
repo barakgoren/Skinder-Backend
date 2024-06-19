@@ -28,6 +28,17 @@ router.get('/unapproved', isAuth, async (req, res) => {
     }
 });
 
+// Get all user's orders
+router.get('/mine', isAuth, async (req, res) => {
+    try {
+        const orders = await OrderModel.find({ instructor: req.userId }).populate('client').populate('location');
+        return res.status(200).json(orders);
+    } catch (error) {
+        console.error('Error getting user orders:', error);
+        res.status(500).json({ message: 'Internal server error', error });
+    }
+});
+
 
 // --------------------------- POSTS ---------------------------
 
