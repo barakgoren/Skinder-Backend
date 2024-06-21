@@ -207,6 +207,9 @@ router.patch('/set-admins', isAdmin, async (req, res) => {
         newAdmins.forEach(async (admin) => {
             const user = await UserModel.findById(admin);
             if (user && !user.role.includes('Admin')) {
+                if (user.role.includes('User')) {
+                    user.role = user.role.filter(role => role !== 'User');
+                }
                 user.role.push('Admin');
             }
             await user.save();
@@ -226,6 +229,9 @@ router.patch('/remove-admins', isAdmin, async (req, res) => {
             const user = await UserModel.findById(admin);
             if (user && user.role.includes('Admin')) {
                 user.role = user.role.filter(role => role !== 'Admin');
+                if (!user.role.length) {
+                    user.role.push('User');
+                }
             }
             await user.save();
         });
