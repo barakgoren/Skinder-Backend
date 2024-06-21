@@ -3,7 +3,7 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const { UserModel, validateUser } = require('../models/UserModel');
-const { genToken, isAuth } = require('../utils/auth');
+const { genToken, isAuth, isAdmin } = require('../utils/auth');
 const { Instructor, validateInstructor } = require('../models/Instructor');
 const { uploadSingle } = require('../utils/uploadHandler');
 const path = require("path");
@@ -165,23 +165,6 @@ router.post('/login', async (req, res) => {
 
 // --------------------------- PATCHS ---------------------------
 
-// Edit rating of instructor
-router.patch('/:id', async (req, res) => {
-    try {
-        const instructor = await Instructor.findById(req.params.id);
-        if (!instructor) {
-            return res.status(404).send('Instructor not found');
-        }
-        req.body.rating = parseInt(req.body.rating);
-        instructor.rating.push(req.body.rating);
-        await instructor.save();
-        return res.json(instructor);
-    } catch (error) {
-        console.error('Error updating instructor:', error);
-        return res.status(500).json({ message: 'Internal server error', error });
-    }
-});
-
 // Adding document to saved array
 router.patch('/save/:id', async (req, res) => {
     try {
@@ -213,6 +196,59 @@ router.patch('/unsave/:id', async (req, res) => {
         return res.status(200).json(user);
     } catch (error) {
         console.error('Error unsaving document:', error);
+        return res.status(500).json({ message: 'Internal server error', error });
+    }
+});
+
+// Set as an admin
+router.patch('/set-admins', isAdmin, async (req, res) => {
+    let newAdmins = req.body.admins;
+    try {
+        newAdmins.forEach(async (admin) => {
+            const user = await UserModel.findById(admin);
+            if (user && !user.role.includes('Admin')) {
+                user.role.push('Admin');
+            }
+            await user.save();
+        });
+        res.status(200).send('Admins set successfully');
+    } catch (error) {
+        console.error('Error setting admins:', error);
+        return res.status(500).json({ message: 'Internal server error', error });
+    }
+});
+
+// Remove admin role
+router.patch('/remove-admins', isAdmin, async (req, res) => {
+    let removedAdmins = req.body.admins;
+    try {
+        removedAdmins.forEach(async (admin) => {
+            const user = await UserModel.findById(admin);
+            if (user && user.role.includes('Admin')) {
+                user.role = user.role.filter(role => role !== 'Admin');
+            }
+            await user.save();
+        });
+        res.status(200).send('Admins removed successfully');
+    } catch (error) {
+        console.error('Error removing admins:', error);
+        return res.status(500).json({ message: 'Internal server error', error });
+    }
+});
+
+// Edit rating of instructor
+router.patch('/:id', async (req, res) => {
+    try {
+        const instructor = await Instructor.findById(req.params.id);
+        if (!instructor) {
+            return res.status(404).send('Instructor not found');
+        }
+        req.body.rating = parseInt(req.body.rating);
+        instructor.rating.push(req.body.rating);
+        await instructor.save();
+        return res.json(instructor);
+    } catch (error) {
+        console.error('Error updating instructor:', error);
         return res.status(500).json({ message: 'Internal server error', error });
     }
 });
