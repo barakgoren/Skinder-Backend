@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const Joi = require('joi');
+const cron = require('node-cron');
 
 const orderSchema = mongoose.Schema({
     dateCreated: {
@@ -45,6 +46,27 @@ const validateOrder = (_bodyData) => {
     });
     return joiSchema.validate(_bodyData);
 }
+
+const updateOrders = async () => {
+    console.log('Updating orders');
+    let orders = await OrderModel.find();
+    console.log(`Found ${orders.length} orders`);
+
+    const currentDate = new Date();
+
+    for (let order of orders) {
+        let orderDate = new Date(order.date[0]);
+        if (orderDate < currentDate) {
+            try {
+                await OrderModel.findByIdAndDelete(order._id);
+            } catch (error) {
+                console.error(`Error removing order ${order._id}: ${error}`);
+            }
+        }
+    }
+};
+
+cron.schedule('* * * * *', updateOrders);
 
 const OrderModel = mongoose.model('Order', orderSchema);
 
